@@ -174,6 +174,7 @@ class Chef
 
       return unless @new_resource.delayed || @new_resource.immediately
 
+      forward_fired_event = false
       extraneous = existing - desired
       extraneous.each do |name|
         r = @purge.call(name, @new_resource)
@@ -185,8 +186,11 @@ class Chef
           r.run_action(act)
         else
           @run_context.resource_collection << r
+          forward_fired_event = true
         end
+        forward_fired_event = true if r.updated_by_last_action?
       end
+      new_resource.updated_by_last_action(forward_fired_event)
     end
 
     def purge(name, this)
